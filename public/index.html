@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shop Haul Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Geist:wght@400;500;700;800&family=Geist+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="intro-loader" class="intro-loader" aria-hidden="true">
+      <video
+        id="intro-video"
+        class="intro-video"
+        autoplay
+        muted
+        playsinline
+        preload="auto"
+      >
+        <source src="/assets/shop-haul-logo-anim.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-switch">
+          <img class="topbar-logo-quer" src="/assets/shop-haul-logo-white-quer.svg" alt="Shop Haul" />
+          <div class="top-actions">
+            <a class="topbar-link" href="#" data-open-signup>
+              Join free
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-logo">
+          <img src="/assets/shop-haul-logo-white.svg" alt="Shop Haul logo" />
+        </div>
+        <h1>
+          <span class="hero-line">E-Commerce Meets Design.</span><br />
+          <span class="hero-line">Stay Ahead of the Curve!</span>
+        </h1>
+        <p class="subtitle">
+          Discover the most innovative Shopify stores curated from the
+          Shop Haul archive.
+        </p>
+      </div>
+    </section>
+
+    <main class="canvas">
+      <div class="container">
+        <section class="controls">
+          <div class="filter-strip">
+            <label class="filter-chip">
+              <select id="category-filter">
+                <option value="all">All categories</option>
+              </select>
+            </label>
+
+            <label class="filter-chip">
+              <select id="tag-filter">
+                <option value="all">All tags</option>
+              </select>
+            </label>
+
+            <label class="filter-chip filter-chip-wide">
+              <input id="summary-filter" type="search" placeholder="Search description / notes / summary..." />
+            </label>
+
+            <label class="filter-chip">
+              <select id="sort-select">
+                <option value="recent">Recently edited</option>
+                <option value="oldest">Oldest edited</option>
+                <option value="az">Title A-Z</option>
+                <option value="za">Title Z-A</option>
+              </select>
+            </label>
+
+            <div class="filter-meta">
+              <span id="active-filter-count" class="active-filter-count">0</span>
+              <button id="reset-filters" type="button" class="reset-filters">Reset filters ↺</button>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="status-row">
+            <div id="status" class="status" aria-live="polite">
+              <span id="status-text">Loading shops...</span>
+              <span id="status-spinner" class="status-spinner" aria-hidden="true"></span>
+            </div>
+            <p class="screenshot-credit">
+              Screenshots by
+              <a href="https://www.onemillionscreenshots.com/" target="_blank" rel="noopener noreferrer">
+                One Million Screenshots
+              </a>
+            </p>
+          </div>
+          <div id="gallery" class="gallery"></div>
+          <div class="gallery-actions">
+            <button id="load-more" type="button" class="load-more" hidden>Load more</button>
+            <div id="scroll-sentinel" aria-hidden="true" hidden></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <a href="/" class="footer-brand" aria-label="Shop Haul home">
+            <img src="/assets/shop-haul-logo-white-quer.svg" alt="Shop Haul" />
+          </a>
+          <p class="footer-copy">
+            Passionate about design, obsessed with commerce, and always exploring
+            standout stores.
+          </p>
+        </div>
+        <form class="footer-form" action="#" onsubmit="return false;">
+          <input type="email" placeholder="Enter your email" aria-label="Footer email" />
+          <button type="button" data-open-signup>Join free</button>
+        </form>
+      </div>
+    </footer>
+
+    <div id="signup-modal" class="signup-modal" hidden aria-hidden="true">
+      <div class="signup-modal-backdrop" data-close-signup></div>
+      <div class="signup-modal-panel" role="dialog" aria-modal="true" aria-label="Join Shop Haul">
+        <button type="button" class="signup-modal-close" data-close-signup aria-label="Close signup">Close</button>
+        <iframe
+          src="https://embeds.beehiiv.com/8917ce1a-75db-4db1-b1f8-6e623ee7d352"
+          data-test-id="beehiiv-embed"
+          width="100%"
+          height="320"
+          frameborder="0"
+          scrolling="no"
+          style="border-radius: 4px; border: 2px solid #e5e7eb; margin: 0; background-color: transparent;"
+        ></iframe>
+      </div>
+    </div>
+
+    <template id="card-template">
+      <article class="card">
+        <a class="image-link" target="_blank" rel="noopener noreferrer">
+          <img class="shot" alt="" loading="lazy" />
+        </a>
+        <div class="card-body">
+          <h2 class="shop-name"></h2>
+          <p class="notes"></p>
+          <div class="meta-row">
+            <div class="chip-row"></div>
+            <div class="action-row">
+              <a class="visit" target="_blank" rel="noopener noreferrer">Visit site</a>
+              <button class="action-icon copy-link" type="button" aria-label="Copy shop URL">Copy</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="/script.js"></script>
+  </body>
+</html>
