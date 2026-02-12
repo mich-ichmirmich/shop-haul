@@ -1,5 +1,3 @@
-const introLoaderEl = document.getElementById("intro-loader");
-const introVideoEl = document.getElementById("intro-video");
 const signupModalEl = document.getElementById("signup-modal");
 const statusEl = document.getElementById("status");
 const statusTextEl = document.getElementById("status-text");
@@ -19,8 +17,6 @@ const openSignupEls = Array.from(document.querySelectorAll("[data-open-signup]")
 const closeSignupEls = Array.from(document.querySelectorAll("[data-close-signup]"));
 
 const PAGE_SIZE = 12;
-const INTRO_MAX_WAIT_MS = 12000;
-const INTRO_FALLBACK_MS = 2200;
 const MACBOOK_VIEWPORT_WIDTH = 3308;
 const MACBOOK_VIEWPORT_HEIGHT = 1900;
 const thumUrlFor = (url) =>
@@ -103,11 +99,6 @@ function setStatus(message, loading = false) {
   }
 }
 
-function hideIntro() {
-  if (!introLoaderEl) return;
-  introLoaderEl.classList.add("hidden");
-}
-
 function openSignupModal() {
   if (!signupModalEl) return;
   signupModalEl.hidden = false;
@@ -120,43 +111,6 @@ function closeSignupModal() {
   signupModalEl.hidden = true;
   signupModalEl.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
-}
-
-function waitForIntroComplete() {
-  if (!introLoaderEl || !introVideoEl) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve) => {
-    let settled = false;
-    let fallbackTimer = 0;
-    let hardStopTimer = 0;
-
-    const done = () => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(fallbackTimer);
-      window.clearTimeout(hardStopTimer);
-      introVideoEl.removeEventListener("ended", done);
-      introVideoEl.removeEventListener("error", done);
-      resolve();
-    };
-
-    introVideoEl.addEventListener("ended", done, { once: true });
-    introVideoEl.addEventListener("error", done, { once: true });
-
-    // If autoplay is blocked or the video can't play in time, fall back quickly.
-    fallbackTimer = window.setTimeout(done, INTRO_FALLBACK_MS);
-    // Prevent any stuck loader in edge cases.
-    hardStopTimer = window.setTimeout(done, INTRO_MAX_WAIT_MS);
-
-    const playAttempt = introVideoEl.play();
-    if (playAttempt && typeof playAttempt.catch === "function") {
-      playAttempt.catch(() => {
-        // Fallback timer handles this case.
-      });
-    }
-  });
 }
 
 function setSelectOptions(selectEl, items, allLabel) {
@@ -501,5 +455,4 @@ if (!statusEl || !galleryEl || !cardTemplate) {
 } else {
   syncTopbarState();
   load();
-  waitForIntroComplete().finally(hideIntro);
 }
