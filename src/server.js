@@ -16,6 +16,18 @@ const screenshotCacheDir = isVercel ? path.join("/tmp", "shop-haul-screenshots")
 const screenshotTtlHours = Number(process.env.SCREENSHOT_CACHE_TTL_HOURS || 168);
 const screenshotTtlMs = Math.max(1, screenshotTtlHours) * 60 * 60 * 1000;
 const screenshotVersion = "v3";
+const shopsCacheTtlSeconds = Number(process.env.SHOPS_CACHE_TTL_SECONDS || 300);
+const shopsCacheTtlMs = Math.max(5, shopsCacheTtlSeconds) * 1000;
+const edgeCacheSeconds = Number(process.env.SHOPS_EDGE_CACHE_SECONDS || 60);
+const edgeStaleSeconds = Number(process.env.SHOPS_EDGE_STALE_SECONDS || 300);
+
+const shopsCache =
+  globalThis.__shopHaulShopsCache ||
+  (globalThis.__shopHaulShopsCache = {
+    payload: null,
+    fetchedAt: 0,
+    inflight: null
+  });
 
 const propertyMap = {
   name: process.env.NOTION_NAME_PROP || "Name",
@@ -124,6 +136,65 @@ async function fetchScreenshotBuffer(targetUrl) {
   throw new Error(lastError);
 }
 
+async function buildShopsPayload() {
+  const notionData = await fetchShopsFromNotion({
+    notionApiKey: process.env.NOTION_API_KEY,
+    databaseId: process.env.NOTION_DATABASE_ID,
+    propertyMap
+  });
+
+  const payload = notionData.items.map((shop) => ({
+    ...shop,
+    screenshot: `/api/screenshot?u=${encodeURIComponent(shop.url)}&sv=${screenshotVersion}`
+  }));
+
+  const tags = Array.from(
+    new Set(payload.flatMap((shop) => shop.tags).map((tag) => tag.trim()).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
+  const categories = Array.from(
+    new Set(payload.map((shop) => String(shop.category || "").trim()).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
+
+  return {
+    shops: payload,
+    categories,
+    tags,
+    count: payload.length,
+    totalRows: notionData.totalRows,
+    shopsWithUrl: notionData.shopsWithUrl,
+    databaseId: process.env.NOTION_DATABASE_ID
+  };
+}
+
+function isFreshCache() {
+  if (!shopsCache.payload || !shopsCache.fetchedAt) return false;
+  return Date.now() - shopsCache.fetchedAt < shopsCacheTtlMs;
+}
+
+async function getShopsPayload() {
+  if (isFreshCache()) {
+    return { payload: shopsCache.payload, source: "memory-fresh" };
+  }
+
+  if (shopsCache.inflight) {
+    const payload = await shopsCache.inflight;
+    return { payload, source: "memory-inflight" };
+  }
+
+  shopsCache.inflight = buildShopsPayload()
+    .then((payload) => {
+      shopsCache.payload = payload;
+      shopsCache.fetchedAt = Date.now();
+      return payload;
+    })
+    .finally(() => {
+      shopsCache.inflight = null;
+    });
+
+  const payload = await shopsCache.inflight;
+  return { payload, source: "notion-refresh" };
+}
+
 app.use(express.static(publicDir));
 
 app.get("/api/screenshot", async (req, res) => {
@@ -161,34 +232,18 @@ app.get("/api/screenshot", async (req, res) => {
 
 app.get("/api/shops", async (_req, res) => {
   try {
-    const notionData = await fetchShopsFromNotion({
-      notionApiKey: process.env.NOTION_API_KEY,
-      databaseId: process.env.NOTION_DATABASE_ID,
-      propertyMap
-    });
-
-    const payload = notionData.items.map((shop) => ({
-      ...shop,
-      screenshot: `/api/screenshot?u=${encodeURIComponent(shop.url)}&sv=${screenshotVersion}`
-    }));
-
-    const tags = Array.from(
-      new Set(payload.flatMap((shop) => shop.tags).map((tag) => tag.trim()).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b));
-    const categories = Array.from(
-      new Set(payload.map((shop) => String(shop.category || "").trim()).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b));
-
-    res.json({
-      shops: payload,
-      categories,
-      tags,
-      count: payload.length,
-      totalRows: notionData.totalRows,
-      shopsWithUrl: notionData.shopsWithUrl,
-      databaseId: process.env.NOTION_DATABASE_ID
-    });
+    const { payload, source } = await getShopsPayload();
+    res.setHeader("cache-control", `public, s-maxage=${edgeCacheSeconds}, stale-while-revalidate=${edgeStaleSeconds}`);
+    res.setHeader("x-shops-cache", source);
+    res.json(payload);
   } catch (error) {
+    if (shopsCache.payload) {
+      res.setHeader("cache-control", `public, s-maxage=${edgeCacheSeconds}, stale-while-revalidate=${edgeStaleSeconds}`);
+      res.setHeader("x-shops-cache", "memory-stale-on-error");
+      res.json(shopsCache.payload);
+      return;
+    }
+
     res.status(500).json({
       error: "Failed to load Notion database.",
       details: error instanceof Error ? error.message : String(error)
