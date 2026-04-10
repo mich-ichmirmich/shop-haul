@@ -1,4 +1,7 @@
 const signupModalEl = document.getElementById("signup-modal");
+const heroEl = document.querySelector(".hero");
+const heroGlobeArtEl = document.getElementById("hero-globe-art");
+const heroGlobeCanvasEl = document.getElementById("hero-globe-canvas");
 const statusEl = document.getElementById("status");
 const statusTextEl = document.getElementById("status-text");
 const statusSpinnerEl = document.getElementById("status-spinner");
@@ -39,6 +42,160 @@ let activeSort = "recent";
 let currentPage = 1;
 let isAutoLoading = false;
 let sentinelObserver = null;
+
+async function initHeroGlobe() {
+  if (!heroEl || !heroGlobeArtEl || !heroGlobeCanvasEl) return;
+
+  try {
+    const { default: createGlobe } = await import("https://esm.sh/cobe@0.6.3");
+
+    let phi = 5.65;
+    let theta = 0.48;
+    let width = 0;
+    let globe = null;
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let autoSpin = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const baseMarkers = [
+      { location: [52.52, 13.4], size: 0.09 },
+      { location: [59.33, 18.06], size: 0.08 },
+      { location: [51.51, -0.13], size: 0.08 },
+      { location: [48.85, 2.35], size: 0.08 },
+      { location: [40.71, -74.0], size: 0.085 },
+      { location: [34.05, -118.24], size: 0.07 },
+      { location: [25.2, 55.27], size: 0.07 },
+      { location: [19.07, 72.88], size: 0.07 },
+      { location: [13.08, 80.27], size: 0.06 },
+      { location: [1.35, 103.82], size: 0.08 },
+      { location: [35.68, 139.69], size: 0.08 },
+      { location: [37.56, 126.98], size: 0.08 },
+      { location: [-6.21, 106.85], size: 0.065 },
+      { location: [-33.87, 151.21], size: 0.08 },
+      { location: [-37.81, 144.96], size: 0.07 }
+    ];
+
+    const getWidth = () => heroGlobeArtEl.offsetWidth || 760;
+
+    const destroyGlobe = () => {
+      if (globe && typeof globe.destroy === "function") {
+        globe.destroy();
+      }
+      globe = null;
+    };
+
+    const buildGlobe = () => {
+      destroyGlobe();
+      width = getWidth();
+
+      globe = createGlobe(heroGlobeCanvasEl, {
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        width: width * 2,
+        height: width * 2,
+        phi,
+        theta,
+        dark: 0,
+        diffuse: 1.2,
+        mapSamples: 22000,
+        mapBrightness: 5.2,
+        baseColor: [0.945, 0.925, 0.89],
+        markerColor: [0.86, 1, 0.29],
+        glowColor: [1, 0.97, 0.9],
+        opacity: 0.72,
+        markers: baseMarkers,
+        onRender: (state) => {
+          const now = performance.now() * 0.001;
+          state.width = width * 2;
+          state.height = width * 2;
+          state.phi = phi;
+          state.theta = theta;
+          state.markers = baseMarkers.map((marker, index) => {
+            const pulse = 0.84 + Math.sin(now * 1.8 + index * 0.85) * 0.16;
+            return {
+              ...marker,
+              size: marker.size * pulse
+            };
+          });
+          state.markerColor = [0.86, 1, 0.29];
+          state.glowColor = [0.94, 1, 0.48];
+
+          if (!isDragging && autoSpin) {
+            phi += 0.00105;
+          }
+        }
+      });
+    };
+
+    const updateTransform = (clientX, clientY) => {
+      const rect = heroEl.getBoundingClientRect();
+      const px = (clientX - rect.left) / rect.width - 0.5;
+      const py = (clientY - rect.top) / rect.height - 0.5;
+      const offsetX = px * 14;
+      const offsetY = py * 12;
+      heroGlobeArtEl.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
+    };
+
+    const resetTransform = () => {
+      heroGlobeArtEl.style.transform = "translate3d(0, 0, 0)";
+    };
+
+    const pointerDown = (clientX, clientY) => {
+      isDragging = true;
+      autoSpin = false;
+      lastX = clientX;
+      lastY = clientY;
+      heroGlobeArtEl.style.cursor = "grabbing";
+    };
+
+    const pointerMove = (clientX, clientY) => {
+      updateTransform(clientX, clientY);
+      if (!isDragging) return;
+
+      const deltaX = clientX - lastX;
+      const deltaY = clientY - lastY;
+      lastX = clientX;
+      lastY = clientY;
+
+      phi -= deltaX * 0.0065;
+      theta = Math.max(0.2, Math.min(1.05, theta + deltaY * 0.0032));
+    };
+
+    const pointerUp = () => {
+      isDragging = false;
+      heroGlobeArtEl.style.cursor = "grab";
+    };
+
+    buildGlobe();
+    heroGlobeArtEl.style.cursor = "grab";
+
+    heroGlobeArtEl.addEventListener("pointerdown", (event) => {
+      pointerDown(event.clientX, event.clientY);
+      heroGlobeArtEl.setPointerCapture?.(event.pointerId);
+    });
+
+    heroGlobeArtEl.addEventListener("pointermove", (event) => {
+      pointerMove(event.clientX, event.clientY);
+    });
+
+    heroGlobeArtEl.addEventListener("pointerleave", () => {
+      if (!isDragging) resetTransform();
+    });
+
+    window.addEventListener("pointerup", () => {
+      pointerUp();
+    });
+
+    window.addEventListener("resize", () => {
+      buildGlobe();
+    });
+  } catch (error) {
+    console.warn("Hero globe failed to load", error);
+    if (heroGlobeArtEl) {
+      heroGlobeArtEl.hidden = true;
+    }
+  }
+}
 
 function syncTopbarState() {
   if (!topbarEl) return;
@@ -453,6 +610,7 @@ async function load() {
 if (!statusEl || !galleryEl || !cardTemplate) {
   console.error("Gallery init failed: missing required DOM elements.");
 } else {
+  initHeroGlobe();
   syncTopbarState();
   load();
 }
