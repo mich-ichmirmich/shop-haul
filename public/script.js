@@ -49,14 +49,15 @@ async function initHeroGlobe() {
   try {
     const { default: createGlobe } = await import("https://esm.sh/cobe@0.6.3");
 
-    let phi = 5.65;
-    let theta = 0.48;
+    let phi = 5.92;
+    let theta = 0.68;
     let width = 0;
     let globe = null;
     let isDragging = false;
     let lastX = 0;
     let lastY = 0;
     let autoSpin = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let spinResumeTimer = null;
 
     const baseMarkers = [
       { location: [52.52, 13.4], size: 0.09 },
@@ -96,13 +97,13 @@ async function initHeroGlobe() {
         phi,
         theta,
         dark: 0,
-        diffuse: 1.2,
-        mapSamples: 22000,
-        mapBrightness: 5.2,
-        baseColor: [0.945, 0.925, 0.89],
+        diffuse: 1.06,
+        mapSamples: 30000,
+        mapBrightness: 3.4,
+        baseColor: [0.964, 0.949, 0.918],
         markerColor: [0.86, 1, 0.29],
-        glowColor: [1, 0.97, 0.9],
-        opacity: 0.72,
+        glowColor: [0.98, 0.97, 0.9],
+        opacity: 0.54,
         markers: baseMarkers,
         onRender: (state) => {
           const now = performance.now() * 0.001;
@@ -118,38 +119,28 @@ async function initHeroGlobe() {
             };
           });
           state.markerColor = [0.86, 1, 0.29];
-          state.glowColor = [0.94, 1, 0.48];
+          state.glowColor = [0.95, 1, 0.52];
 
           if (!isDragging && autoSpin) {
-            phi += 0.00105;
+            phi += 0.00042;
           }
         }
       });
     };
 
-    const updateTransform = (clientX, clientY) => {
-      const rect = heroEl.getBoundingClientRect();
-      const px = (clientX - rect.left) / rect.width - 0.5;
-      const py = (clientY - rect.top) / rect.height - 0.5;
-      const offsetX = px * 14;
-      const offsetY = py * 12;
-      heroGlobeArtEl.style.transform = `translate3d(${offsetX}px, ${offsetY}px, 0)`;
-    };
-
-    const resetTransform = () => {
-      heroGlobeArtEl.style.transform = "translate3d(0, 0, 0)";
-    };
-
     const pointerDown = (clientX, clientY) => {
       isDragging = true;
       autoSpin = false;
+      if (spinResumeTimer) {
+        window.clearTimeout(spinResumeTimer);
+        spinResumeTimer = null;
+      }
       lastX = clientX;
       lastY = clientY;
       heroGlobeArtEl.style.cursor = "grabbing";
     };
 
     const pointerMove = (clientX, clientY) => {
-      updateTransform(clientX, clientY);
       if (!isDragging) return;
 
       const deltaX = clientX - lastX;
@@ -157,13 +148,17 @@ async function initHeroGlobe() {
       lastX = clientX;
       lastY = clientY;
 
-      phi -= deltaX * 0.0065;
-      theta = Math.max(0.2, Math.min(1.05, theta + deltaY * 0.0032));
+      phi -= deltaX * 0.0082;
+      theta = Math.max(0.45, Math.min(0.95, theta + deltaY * 0.0036));
     };
 
     const pointerUp = () => {
+      if (!isDragging) return;
       isDragging = false;
       heroGlobeArtEl.style.cursor = "grab";
+      spinResumeTimer = window.setTimeout(() => {
+        autoSpin = true;
+      }, 800);
     };
 
     buildGlobe();
@@ -176,10 +171,6 @@ async function initHeroGlobe() {
 
     heroGlobeArtEl.addEventListener("pointermove", (event) => {
       pointerMove(event.clientX, event.clientY);
-    });
-
-    heroGlobeArtEl.addEventListener("pointerleave", () => {
-      if (!isDragging) resetTransform();
     });
 
     window.addEventListener("pointerup", () => {

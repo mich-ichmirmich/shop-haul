@@ -177,39 +177,39 @@ body.modal-open {
     radial-gradient(circle at 50% -26%, rgba(219, 255, 73, 0.42), transparent 36%),
     linear-gradient(180deg, #f2f1ec 0%, #ebebe6 100%);
   border-bottom: 1px solid #d3d3cf;
+  min-height: 370px;
 }
 
 .hero-globe {
   position: absolute;
-  inset: 0 -2% 0 0;
+  inset: 0;
   pointer-events: none;
   z-index: 0;
 }
 
 .hero-globe-haze {
   position: absolute;
-  right: 7%;
-  bottom: -28%;
-  width: min(54vw, 720px);
+  right: max(-3rem, -4vw);
+  bottom: -36%;
+  width: min(46vw, 660px);
   aspect-ratio: 1;
   border-radius: 50%;
   background:
     radial-gradient(circle at 48% 48%, rgba(255, 247, 234, 0.82) 0%, rgba(255, 247, 234, 0.3) 48%, transparent 76%);
-  filter: blur(16px);
-  opacity: 0.94;
+  filter: blur(22px);
+  opacity: 0.78;
 }
 
 .hero-globe-art {
   position: absolute;
-  right: 4.5%;
-  bottom: -44%;
-  width: min(56vw, 760px);
+  right: max(-6rem, -8vw);
+  bottom: -56%;
+  width: min(50vw, 700px);
   aspect-ratio: 1;
-  opacity: 0.58;
+  opacity: 0.34;
   pointer-events: auto;
-  transform: translate3d(0, 0, 0);
-  transform-origin: 50% 50%;
-  transition: transform 160ms ease-out;
+  user-select: none;
+  touch-action: none;
 }
 
 .hero-globe-canvas {
@@ -218,7 +218,7 @@ body.modal-open {
   height: 100%;
   border-radius: 50%;
   pointer-events: auto;
-  filter: drop-shadow(0 10px 24px rgba(198, 186, 170, 0.28));
+  filter: drop-shadow(0 16px 34px rgba(198, 186, 170, 0.16));
 }
 
 .hero-inner {
@@ -687,17 +687,17 @@ body.modal-open {
   }
 
   .hero-globe-haze {
-    right: -12%;
-    bottom: -8%;
-    width: 90vw;
-    opacity: 0.78;
+    right: -10%;
+    bottom: -16%;
+    width: 84vw;
+    opacity: 0.6;
   }
 
   .hero-globe-art {
-    right: -24%;
-    bottom: -22%;
-    width: 98vw;
-    opacity: 0.42;
+    right: -30%;
+    bottom: -28%;
+    width: 88vw;
+    opacity: 0.2;
   }
 
   .hero-line {

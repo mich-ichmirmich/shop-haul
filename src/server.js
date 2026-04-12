@@ -1,5 +1,6 @@
 import "dotenv/config";
 import crypto from "node:crypto";
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +12,8 @@ const port = Number(process.env.PORT || 3000);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.resolve(__dirname, "../public");
+const distDir = path.resolve(__dirname, "../dist");
+const staticDir = fsSync.existsSync(path.join(distDir, "index.html")) ? distDir : publicDir;
 const isVercel = Boolean(process.env.VERCEL);
 const screenshotCacheDir = isVercel ? path.join("/tmp", "shop-haul-screenshots") : path.join(publicDir, "cache", "screenshots");
 const screenshotTtlHours = Number(process.env.SCREENSHOT_CACHE_TTL_HOURS || 168);
@@ -195,7 +198,7 @@ async function getShopsPayload() {
   return { payload, source: "notion-refresh" };
 }
 
-app.use(express.static(publicDir));
+app.use(express.static(staticDir));
 
 app.get("/api/screenshot", async (req, res) => {
   const targetUrl = typeof req.query.u === "string" ? req.query.u.trim() : "";
@@ -252,7 +255,7 @@ app.get("/api/shops", async (_req, res) => {
 });
 
 app.get("*", (_req, res) => {
-  res.sendFile(path.join(publicDir, "index.html"));
+  res.sendFile(path.join(staticDir, "index.html"));
 });
 
 await fs.mkdir(screenshotCacheDir, { recursive: true });
