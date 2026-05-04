@@ -110,6 +110,16 @@
   }
 }
 
+@keyframes vault-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-33.333333%);
+  }
+}
+
 .vault-shell {
   box-shadow: var(--shell-shadow);
 }
@@ -120,6 +130,50 @@
 
 .vault-dot-pulse {
   animation: vault-pulse 1.9s ease-in-out infinite;
+}
+
+.vault-marquee {
+  display: flex;
+  align-items: center;
+  height: 3rem;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.vault-marquee-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: vault-marquee-scroll 24s linear infinite;
+}
+
+.vault-marquee-group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.vault-marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding-right: 2.75rem;
+  font-family: "Geist Mono Variable", monospace;
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.vault-marquee-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: #dbff49;
+  box-shadow: 0 0 18px rgba(219, 255, 73, 0.5);
+}
+
+.vault-marquee:hover .vault-marquee-track {
+  animation-play-state: paused;
 }
 
 .hero {
@@ -242,5 +296,11 @@
 
   .hero-line {
     white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vault-marquee-track {
+    animation: none;
   }
 }

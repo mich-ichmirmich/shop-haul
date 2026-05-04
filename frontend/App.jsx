@@ -551,6 +551,12 @@ function ShopCard({ shop, index, onCopy }) {
 }
 
 export default function App() {
+  const marqueeItems = [
+    "Live vault of standout Shopify stores",
+    "Design, commerce, branding, UX, motion",
+    "Curated by Shop Haul"
+  ];
+
   const [shops, setShops] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
@@ -707,14 +713,23 @@ export default function App() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-black/10 bg-black text-white">
-        <div className="mx-auto flex h-12 max-w-[1560px] items-center justify-center px-4">
-          <button
-            type="button"
-            onClick={() => setSignupOpen(true)}
-            className="font-mono text-[0.79rem] font-semibold text-white underline underline-offset-4"
-          >
-            Join free
-          </button>
+        <div className="vault-marquee">
+          <div className="vault-marquee-track" aria-label="Shop Haul highlights">
+            {[0, 1, 2].map((groupIndex) => (
+              <div
+                key={`marquee-group-${groupIndex}`}
+                className="vault-marquee-group"
+                aria-hidden={groupIndex === 0 ? undefined : "true"}
+              >
+                {marqueeItems.map((item) => (
+                  <div key={`${groupIndex}-${item}`} className="vault-marquee-item">
+                    <span className="vault-marquee-dot" aria-hidden="true" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </header>
 
