@@ -23,6 +23,12 @@ const shopsCacheTtlSeconds = Number(process.env.SHOPS_CACHE_TTL_SECONDS || 300);
 const shopsCacheTtlMs = Math.max(5, shopsCacheTtlSeconds) * 1000;
 const edgeCacheSeconds = Number(process.env.SHOPS_EDGE_CACHE_SECONDS || 60);
 const edgeStaleSeconds = Number(process.env.SHOPS_EDGE_STALE_SECONDS || 300);
+const sitePassword = String(process.env.SITE_PASSWORD || "");
+const isPasswordGateEnabled = Boolean(sitePassword);
+const authCookieName = "shop_haul_vault_auth";
+const authCookieValue = sitePassword
+  ? crypto.createHash("sha256").update(`shop-haul:${sitePassword}`).digest("hex")
+  : "";
 
 const shopsCache =
   globalThis.__shopHaulShopsCache ||
@@ -196,6 +202,168 @@ async function getShopsPayload() {
 
   const payload = await shopsCache.inflight;
   return { payload, source: "notion-refresh" };
+}
+
+function parseCookies(cookieHeader) {
+  if (!cookieHeader) return {};
+
+  return cookieHeader.split(";").reduce((acc, part) => {
+    const [rawKey, ...rawValue] = part.trim().split("=");
+    if (!rawKey) return acc;
+    acc[rawKey] = decodeURIComponent(rawValue.join("=") || "");
+    return acc;
+  }, {});
+}
+
+function buildPasswordGateHtml(errorMessage = "") {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shop Haul Vault</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #ffffff;
+        --fg: #111111;
+        --muted: rgba(17,17,17,.62);
+        --border: rgba(17,17,17,.08);
+        --primary: #dbff49;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(219,255,73,.12) 0, transparent 34%),
+          linear-gradient(180deg, #fff 0%, #fff 100%);
+        font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+        color: var(--fg);
+      }
+      .card {
+        width: min(92vw, 460px);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        background: rgba(255,255,255,.94);
+        box-shadow: 0 24px 80px rgba(17,17,17,.08);
+        padding: 28px;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2rem, 5vw, 2.8rem);
+        line-height: 1;
+        letter-spacing: -.04em;
+      }
+      p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+      form { display: grid; gap: 12px; }
+      input {
+        width: 100%;
+        height: 56px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        padding: 0 16px;
+        font: inherit;
+        outline: none;
+      }
+      button {
+        height: 56px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #111;
+        font: 600 1rem/1 "Geist Mono Variable", ui-monospace, monospace;
+        cursor: pointer;
+      }
+      .error {
+        min-height: 1.2rem;
+        color: #b42318;
+        font-size: .92rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Private Vault</h1>
+      <p>Enter the password to access Shop Haul Vault.</p>
+      <form method="post" action="/auth/login">
+        <input type="password" name="password" placeholder="Password" autocomplete="current-password" required />
+        <div class="error">${errorMessage}</div>
+        <button type="submit">Enter vault</button>
+      </form>
+    </main>
+  </body>
+</html>`;
+}
+
+function timingSafeMatch(expected, actual) {
+  const expectedBuffer = Buffer.from(expected);
+  const actualBuffer = Buffer.from(actual);
+  if (expectedBuffer.length !== actualBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuffer, actualBuffer);
+}
+
+app.use(express.urlencoded({ extended: false }));
+
+if (isPasswordGateEnabled) {
+  app.get("/auth/login", (_req, res) => {
+    res.status(200).type("html").send(buildPasswordGateHtml());
+  });
+
+  app.post("/auth/login", (req, res) => {
+    const submittedPassword = String(req.body?.password || "");
+    const passwordMatches = timingSafeMatch(sitePassword, submittedPassword);
+
+    if (!passwordMatches) {
+      res.status(401).type("html").send(buildPasswordGateHtml("Incorrect password."));
+      return;
+    }
+
+    const secure = isVercel ? "; Secure" : "";
+    res.setHeader(
+      "Set-Cookie",
+      `${authCookieName}=${authCookieValue}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 24 * 14}`
+    );
+    res.redirect(302, "/");
+  });
+
+  app.post("/auth/logout", (_req, res) => {
+    const secure = isVercel ? "; Secure" : "";
+    res.setHeader("Set-Cookie", `${authCookieName}=; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=0`);
+    res.redirect(302, "/auth/login");
+  });
+
+  app.use((req, res, next) => {
+    if (req.path === "/auth/login" || req.path === "/auth/logout") {
+      next();
+      return;
+    }
+
+    const cookies = parseCookies(req.headers.cookie || "");
+    const isAuthed = cookies[authCookieName] && timingSafeMatch(authCookieValue, cookies[authCookieName]);
+
+    if (!isAuthed) {
+      if (req.path.startsWith("/api/")) {
+        res.status(401).json({ error: "Authentication required." });
+        return;
+      }
+
+      res.status(200).type("html").send(buildPasswordGateHtml());
+      return;
+    }
+
+    next();
+  });
 }
 
 app.use(express.static(staticDir));

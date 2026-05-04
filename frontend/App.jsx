@@ -574,7 +574,11 @@ export default function App() {
       try {
         setLoading(true);
         setError("");
-        const response = await fetch("/api/shops");
+        const response = await fetch("/api/shops", { credentials: "include" });
+        if (response.status === 401) {
+          window.location.assign("/auth/login");
+          return;
+        }
         const data = await response.json();
 
         if (!response.ok) {
