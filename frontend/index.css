@@ -176,6 +176,32 @@
   animation-play-state: paused;
 }
 
+.vault-loading-layout {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(260px, 34vh, 420px);
+  padding: 2.5rem 1rem 3rem;
+}
+
+.vault-loading-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.vault-loading-label {
+  font-family: "Geist Mono Variable", monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: rgb(17 17 17 / 0.72);
+}
+
 .hero {
   position: relative;
   overflow: hidden;

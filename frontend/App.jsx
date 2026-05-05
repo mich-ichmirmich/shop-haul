@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "motion/react";
 import * as THREE from "three";
 import ThreeGlobe from "three-globe";
 import { feature } from "topojson-client";
@@ -7,6 +8,14 @@ import countriesTopology from "world-atlas/countries-110m.json";
 const PAGE_SIZE = 12;
 const MACBOOK_VIEWPORT_WIDTH = 3308;
 const MACBOOK_VIEWPORT_HEIGHT = 1900;
+const loaderTransition = {
+  duration: 2.5,
+  ease: [0.175, 0.885, 0.32, 1],
+  times: [0, 0.6, 0.6, 1],
+  repeat: Infinity,
+  repeatType: "mirror",
+  repeatDelay: 0.2,
+};
 
 const thumUrlFor = (url) =>
   `https://image.thum.io/get/width/${MACBOOK_VIEWPORT_WIDTH}/crop/${MACBOOK_VIEWPORT_HEIGHT}/noanimate/${encodeURIComponent(url)}`;
@@ -110,6 +119,133 @@ function sampleSalesMarkers(count) {
     altitude: 0.016 + Math.random() * 0.024,
     color: index % 4 === 0 ? "#f8ffbe" : index % 2 === 0 ? "#efff7e" : "#dbff49",
   }));
+}
+
+function AnalyzingImage({ className = "" }) {
+  return (
+    <div
+      role="status"
+      aria-label="Analyzing image"
+      className={`relative isolate shrink-0 text-black ${className}`.trim()}
+    >
+      <motion.div
+        initial={{
+          clipPath: "inset(0% 0% 0% 0%)",
+        }}
+        animate={{
+          clipPath: [
+            "inset(0% 0% 0% 0%)",
+            "inset(0% 105% 0% 0%)",
+            "inset(0% 105% 0% 0%)",
+            "inset(0% 0% 0% 0%)",
+          ],
+        }}
+        transition={loaderTransition}
+        className="absolute inset-0 z-10 bg-background"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="size-full"
+        >
+          <path
+            d="M4.27209 20.7279L10.8686 14.1314C11.2646 13.7354 11.4627 13.5373 11.691 13.4632C11.8918 13.3979 12.1082 13.3979 12.309 13.4632C12.5373 13.5373 12.7354 13.7354 13.1314 14.1314L19.6839 20.6839M14 15L16.8686 12.1314C17.2646 11.7354 17.4627 11.5373 17.691 11.4632C17.8918 11.3979 18.1082 11.3979 18.309 11.4632C18.5373 11.5373 18.7354 11.7354 19.1314 12.1314L22 15M10 9C10 10.1046 9.10457 11 8 11C6.89543 11 6 10.1046 6 9C6 7.89543 6.89543 7 8 7C9.10457 7 10 7.89543 10 9ZM6.8 21H17.2C18.8802 21 19.7202 21 20.362 20.673C20.9265 20.3854 21.3854 19.9265 21.673 19.362C22 18.7202 22 17.8802 22 16.2V7.8C22 6.11984 22 5.27976 21.673 4.63803C21.3854 4.07354 20.9265 3.6146 20.362 3.32698C19.7202 3 18.8802 3 17.2 3H6.8C5.11984 3 4.27976 3 3.63803 3.32698C3.07354 3.6146 2.6146 4.07354 2.32698 4.63803C2 5.27976 2 6.11984 2 7.8V16.2C2 17.8802 2 18.7202 2.32698 19.362C2.6146 19.9265 3.07354 20.3854 3.63803 20.673C4.27976 21 5.11984 21 6.8 21Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </motion.div>
+      <motion.div
+        initial={{ transform: "translateX(1400%)" }}
+        animate={{
+          transform: [
+            "translateX(1400%)",
+            "translateX(-80%)",
+            "translateX(-80%)",
+            "translateX(1400%)",
+          ],
+        }}
+        transition={loaderTransition}
+        className="absolute z-10 h-full w-[7%] rounded-full bg-current"
+      />
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="absolute inset-0 size-full"
+      >
+        <path
+          d="M6.8 21H17.2C18.8802 21 19.7202 21 20.362 20.673C20.9265 20.3854 21.3854 19.9265 21.673 19.362C22 18.7202 22 17.8802 22 16.2V7.8C22 6.11984 22 5.27976 21.673 4.63803C21.3854 4.07354 20.9265 3.6146 20.362 3.32698C19.7202 3 18.8802 3 17.2 3H6.8C5.11984 3 4.27976 3 3.63803 3.32698C3.07354 3.6146 2.6146 4.07354 2.32698 4.63803C2 5.27976 2 6.11984 2 7.8V16.2C2 17.8802 2 18.7202 2.32698 19.362C2.6146 19.9265 3.07354 20.3854 3.63803 20.673C4.27976 21 5.11984 21 6.8 21Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <rect x="6" y="19" width="1" height="1" fill="currentColor" />
+        <rect x="7" y="18" width="1" height="1" fill="currentColor" />
+        <rect x="7" y="19" width="3" height="1" fill="currentColor" />
+        <rect x="9" y="18" width="1" height="1" fill="currentColor" />
+        <rect x="14" y="19" width="3" height="1" fill="currentColor" />
+        <rect x="15" y="18" width="1" height="1" fill="currentColor" />
+        <rect x="5" y="18" width="2" height="1" fill="currentColor" />
+        <rect x="5" y="17" width="1" height="1" fill="currentColor" />
+        <rect x="10" y="19" width="1" height="1" fill="currentColor" />
+        <rect x="7" y="17" width="1" height="1" fill="currentColor" />
+        <rect x="11" y="19" width="1" height="1" fill="currentColor" />
+        <rect x="10" y="18" width="1" height="1" fill="currentColor" />
+        <rect x="17" y="19" width="1" height="1" fill="currentColor" />
+        <rect x="15" y="4" width="2" height="1" fill="currentColor" />
+        <rect x="3" y="9" width="1" height="3" fill="currentColor" />
+        <rect x="4" y="10" width="1" height="2" fill="currentColor" />
+        <rect x="6" y="9" width="1" height="1" fill="currentColor" />
+        <rect x="15" y="5" width="1" height="1" fill="currentColor" />
+        <rect x="20" y="8" width="1" height="3" fill="currentColor" />
+        <rect x="19" y="9" width="1" height="1" fill="currentColor" />
+        <rect x="7" y="13" width="1" height="1" fill="currentColor" />
+        <rect x="9" y="11" width="1" height="1" fill="currentColor" />
+        <rect x="16" y="12" width="1" height="2" fill="currentColor" />
+        <rect x="13" y="14" width="1" height="1" fill="currentColor" />
+        <rect x="12" y="11" width="1" height="1" fill="currentColor" />
+        <rect x="10" y="9" width="1" height="1" fill="currentColor" />
+        <rect x="10" y="15" width="1" height="1" fill="currentColor" />
+        <rect x="10" y="13" width="1" height="1" fill="currentColor" />
+        <rect x="15" y="9" width="1" height="1" fill="currentColor" />
+        <rect x="13" y="10" width="1" height="1" fill="currentColor" />
+        <rect x="12" y="14" width="1" height="1" fill="currentColor" />
+        <rect x="5" y="4" width="3" height="1" fill="currentColor" />
+        <rect x="6" y="5" width="1" height="1" fill="currentColor" />
+        <rect x="7" y="14" width="1" height="2" fill="currentColor" />
+        <rect x="6" y="14" width="3" height="1" fill="currentColor" />
+        <rect x="16" y="8" width="1" height="1" fill="currentColor" />
+        <rect x="8" y="9" width="1" height="1" fill="currentColor" />
+        <rect x="20" y="16" width="1" height="1" fill="currentColor" />
+        <rect x="12" y="12" width="1" height="1" fill="currentColor" />
+        <rect x="8" y="8" width="1" height="1" fill="currentColor" />
+        <rect x="14" y="12" width="1" height="1" fill="currentColor" />
+        <rect x="17" y="16" width="2" height="1" fill="currentColor" />
+        <rect x="14" y="17" width="1" height="1" fill="currentColor" />
+        <rect x="11" y="5" width="3" height="1" fill="currentColor" />
+        <rect x="12" y="4" width="1" height="1" fill="currentColor" />
+        <rect x="12" y="7" width="1" height="1" fill="currentColor" />
+        <rect x="7" y="11" width="1" height="1" fill="currentColor" />
+        <rect x="15" y="15" width="1" height="1" fill="currentColor" />
+        <rect x="11" y="11" width="1" height="1" fill="currentColor" />
+        <rect x="13" y="9" width="1" height="1" fill="currentColor" />
+        <rect x="12" y="15" width="1" height="1" fill="currentColor" />
+        <rect x="9" y="12" width="2" height="1" fill="currentColor" />
+        <rect x="19" y="13" width="2" height="1" fill="currentColor" />
+        <rect x="9" y="6" width="1" height="1" fill="currentColor" />
+        <rect x="20" y="4" width="1" height="1" fill="currentColor" />
+        <rect x="19" y="4" width="1" height="1" fill="currentColor" />
+        <rect x="3" y="15" width="1" height="2" fill="currentColor" />
+        <rect x="3" y="19" width="1" height="1" fill="currentColor" />
+      </svg>
+      <span className="sr-only">Analyzing image</span>
+    </div>
+  );
 }
 
 function HeroGlobe() {
@@ -679,6 +815,7 @@ export default function App() {
   const hasMore = visibleCount < filteredShops.length;
   const activeFilterCount =
     filters.categories.length + filters.tags.length + Number(Boolean(filters.summary.trim()));
+  const initialLoading = loading && !error && shops.length === 0;
 
   const statusText = error
     ? `Could not load data: ${error}`
@@ -711,7 +848,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-black/10 bg-black text-white">
         <div className="vault-marquee">
           <div className="vault-marquee-track" aria-label="Shop Haul highlights">
@@ -733,8 +870,8 @@ export default function App() {
         </div>
       </header>
 
-      <main className="px-0 pb-10 pt-0">
-        <div className="vault-shell mx-auto w-full overflow-hidden border border-black/6 bg-[#ffffff] sm:rounded-[1.75rem]">
+      <main className="flex flex-1 px-0 pb-0 pt-0">
+        <div className="vault-shell mx-auto flex w-full flex-1 flex-col overflow-hidden border border-black/6 bg-[#ffffff] sm:rounded-[1.75rem]">
           <section className="hero">
             <HeroGlobe />
             <div className="hero-inner">
@@ -752,8 +889,8 @@ export default function App() {
             </div>
           </section>
 
-          <section className="bg-[#ffffff] px-4 py-5 sm:px-5 lg:px-6">
-            <div className="mx-auto max-w-[1760px]">
+          <section className="flex flex-1 flex-col bg-[#ffffff] px-4 py-5 sm:px-5 lg:px-6">
+            <div className="mx-auto flex w-full max-w-[1760px] flex-1 flex-col">
               <div className="flex flex-wrap items-center gap-3 rounded-[1.65rem] bg-black/[0.03] p-3">
                 <CategoryMultiSelect
                   options={categories}
@@ -804,54 +941,65 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="font-mono text-[0.92rem] font-semibold tracking-[-0.02em] text-black/74">{statusText}</p>
-                  {loading && !error ? (
-                    <div className="mt-2 inline-flex items-center gap-2 font-mono text-[0.76rem] text-black/56">
-                      <span>Loading shops</span>
-                      <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-black/18 border-t-black/60 animate-spin" />
+              {initialLoading ? (
+                <div className="vault-loading-layout">
+                  <div className="vault-loading-stack">
+                    <AnalyzingImage className="h-16 w-16 sm:h-20 sm:w-20" />
+                    <p className="vault-loading-label">Fetching Shops</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                      <p className="font-mono text-[0.92rem] font-semibold tracking-[-0.02em] text-black/74">{statusText}</p>
+                      {loading && !error ? (
+                        <div className="mt-2 inline-flex items-center gap-2 font-mono text-[0.76rem] text-black/56">
+                          <span>Loading shops</span>
+                          <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-black/18 border-t-black/60 animate-spin" />
+                        </div>
+                      ) : null}
+                    </div>
+                    <p className="text-right text-[0.84rem] text-black/56">
+                      Screenshots by{" "}
+                      <a
+                        href="https://www.onemillionscreenshots.com/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-black underline underline-offset-4"
+                      >
+                        One Million Screenshots
+                      </a>
+                    </p>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {visibleShops.map((shop, index) => (
+                      <ShopCard key={shop.id} shop={shop} index={index} onCopy={handleCopy} />
+                    ))}
+                  </div>
+
+                  {hasMore ? (
+                    <div className="mt-8 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={handleLoadMore}
+                        disabled={loadingMore}
+                        className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white px-6 font-mono text-[0.82rem] font-semibold text-black transition hover:bg-black/[0.03] disabled:cursor-wait disabled:opacity-70"
+                      >
+                        {loadingMore ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span>Loading more</span>
+                            <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-black/18 border-t-black/60 animate-spin" />
+                          </span>
+                        ) : (
+                          "Load more"
+                        )}
+                      </button>
                     </div>
                   ) : null}
-                </div>
-                <p className="text-right text-[0.84rem] text-black/56">
-                  Screenshots by{" "}
-                  <a
-                    href="https://www.onemillionscreenshots.com/"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-black underline underline-offset-4"
-                  >
-                    One Million Screenshots
-                  </a>
-                </p>
-              </div>
-
-              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {visibleShops.map((shop, index) => (
-                  <ShopCard key={shop.id} shop={shop} index={index} onCopy={handleCopy} />
-                ))}
-              </div>
-
-              {hasMore ? (
-                <div className="mt-8 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={handleLoadMore}
-                    disabled={loadingMore}
-                    className="inline-flex h-12 items-center justify-center rounded-full border border-black/10 bg-white px-6 font-mono text-[0.82rem] font-semibold text-black transition hover:bg-black/[0.03] disabled:cursor-wait disabled:opacity-70"
-                  >
-                    {loadingMore ? (
-                      <span className="inline-flex items-center gap-2">
-                        <span>Loading more</span>
-                        <span className="inline-block h-3.5 w-3.5 rounded-full border-2 border-black/18 border-t-black/60 animate-spin" />
-                      </span>
-                    ) : (
-                      "Load more"
-                    )}
-                  </button>
-                </div>
-              ) : null}
+                </>
+              )}
 
               {copiedUrl ? (
                 <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black px-4 py-2 font-mono text-[0.76rem] text-white shadow-lg">
@@ -861,7 +1009,7 @@ export default function App() {
             </div>
           </section>
 
-          <footer className="bg-black px-4 py-8 text-white sm:px-5 lg:px-6">
+          <footer className="mt-auto bg-black px-4 py-8 text-white sm:px-5 lg:px-6">
             <div className="mx-auto flex max-w-[1760px] flex-col justify-between gap-10 md:flex-row md:items-start">
               <div className="max-w-[620px]">
                 <a href="/" className="inline-flex overflow-visible">
