@@ -1043,7 +1043,7 @@ export default function App() {
                       rel="noreferrer"
                       className="text-[1rem] leading-[1.45] text-white/84 transition hover:text-white"
                     >
-                      Shop Haul Outfit Check
+                      Outfit Check
                     </a>
                   </li>
                   <li>
@@ -1053,7 +1053,7 @@ export default function App() {
                       rel="noreferrer"
                       className="text-[1rem] leading-[1.45] text-white/84 transition hover:text-white"
                     >
-                      Shop Haul Newsletter
+                      Newsletter
                     </a>
                   </li>
                   <li>
@@ -1063,7 +1063,7 @@ export default function App() {
                       rel="noreferrer"
                       className="text-[1rem] leading-[1.45] text-white/84 transition hover:text-white"
                     >
-                      Shop Haul Merchandise
+                      Merchandise
                     </a>
                   </li>
                 </ul>
